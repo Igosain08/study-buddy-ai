@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎓 Study Buddy AI
 
 An intelligent quiz generator powered by Groq AI that creates educational questions on any topic.
@@ -67,3 +68,6 @@ pip install -r requirements.txt
 ---
 
 **Happy Learning! 🎓✨** 
+=======
+# study-buddy-ai
+>>>>>>> 9729755a6685f982d0f4e9cd72b798d604b86c01
