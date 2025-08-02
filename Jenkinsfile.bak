@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_HUB_REPO = "igosain/studybuddy"
+        DOCKER_HUB_REPO = "your-dockerhub-username/studybuddy"
         DOCKER_HUB_CREDENTIALS_ID = "dockerhub-token"
         IMAGE_TAG = "v${BUILD_NUMBER}"
     }
@@ -34,7 +34,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    sed -i 's|image: igosain/studybuddy:.*|image: igosain/studybuddy:${IMAGE_TAG}|' manifests/deployment.yaml
+                    sed -i 's|image: your-dockerhub-username/studybuddy:.*|image: your-dockerhub-username/studybuddy:${IMAGE_TAG}|' manifests/deployment.yaml
                     """
                 }
             }
