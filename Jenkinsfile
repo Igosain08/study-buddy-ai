@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_HUB_REPO = "igosain/studybuddy"
+        DOCKER_HUB_REPO = "YOUR_DOCKERHUB_USERNAME/studybuddy"
         DOCKER_HUB_CREDENTIALS_ID = "dockerhub-token"
         IMAGE_TAG = "v${BUILD_NUMBER}"
     }
@@ -9,7 +9,7 @@ pipeline {
         stage('Checkout Github') {
             steps {
                 echo 'Checking out code from GitHub...'
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/Igosain08/YOUR_REPO.git']])
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO.git']])
             }
         }        
         stage('Build Docker Image') {
@@ -45,11 +45,11 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
                         sh '''
-                        git config user.name "Igosain08"
-                        git config user.email "ishaangosain08@gmail.com"
+                        git config user.name "YOUR_GITHUB_USERNAME"
+                        git config user.email "your-email@example.com"
                         git add manifests/deployment.yaml
                         git commit -m "Update image tag to ${IMAGE_TAG}" || echo "No changes to commit"
-                        git push https://${GIT_USER}:${GIT_PASS}@github.com/Igosain08/YOUR_REPO.git HEAD:main
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/YOUR_GITHUB_USERNAME/YOUR_REPO.git HEAD:main
                         '''
                     }
                 }
