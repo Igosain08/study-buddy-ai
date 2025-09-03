@@ -40,7 +40,22 @@ class QuizManager:
                         'correct_answer': question.answer
                     })
         except Exception as e:
-            st.error(f"Error generating question {e}")
+            error_msg = str(e)
+            if "401" in error_msg or "Invalid API Key" in error_msg:
+                st.error("🚨 **API Key Issue Detected**")
+                st.warning("The Groq API key is experiencing temporary issues. This could be due to:")
+                st.markdown("""
+                - **Rate limiting**: You may have exceeded the API usage limits
+                - **Temporary service issues**: Groq's servers might be experiencing problems
+                - **API key expiration**: Your API key might need to be refreshed
+                
+                **Solutions:**
+                1. Wait a few minutes and try again
+                2. Check your Groq API key at [console.groq.com](https://console.groq.com/)
+                3. Generate a new API key if needed
+                """)
+            else:
+                st.error(f"Error generating question: {e}")
             return False
         
         return True

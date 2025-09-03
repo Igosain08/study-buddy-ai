@@ -3,11 +3,19 @@ import streamlit as st
 from dotenv import load_dotenv
 from src.utils.helpers import *
 from src.generator.question_generator import QuestionGenerator
-load_dotenv()
+
+# Force reload environment variables
+load_dotenv(override=True)
 
 
 def main():
     st.set_page_config(page_title="Study Buddy AI" , page_icon="🎓")
+
+    # Debug: Show API key status
+    from src.config.settings import settings
+    with st.sidebar.expander("🔧 Debug Info"):
+        st.write(f"API Key: {settings.GROQ_API_KEY[:10]}..." if settings.GROQ_API_KEY else "No API Key")
+        st.write(f"Key Length: {len(settings.GROQ_API_KEY) if settings.GROQ_API_KEY else 0}")
 
     if 'quiz_manager'not in st.session_state:
         st.session_state.quiz_manager = QuizManager()

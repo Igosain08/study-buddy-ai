@@ -5,6 +5,8 @@ from src.llm.groq_client import get_groq_llm
 from src.config.settings import settings
 from src.common.logger import get_logger
 from src.common.custom_exception import CustomException
+import time
+import random
 
 
 class QuestionGenerator:
@@ -16,19 +18,41 @@ class QuestionGenerator:
 
         for attempt in range(settings.MAX_RETRIES):
             try:
-                self.logger.info(f"Generating question for topic {topic} with difficulty {difficulty}")
+                self.logger.info(f"Generating question for topic {topic} with difficulty {difficulty} (Attempt {attempt + 1}/{settings.MAX_RETRIES})")
 
                 response = self.llm.invoke(prompt.format(topic=topic , difficulty=difficulty))
 
                 parsed = parser.parse(response.content)
 
-                self.logger.info("Sucesfully parsed the question")
+                self.logger.info("Successfully parsed the question")
 
                 return parsed
             
             except Exception as e:
-                self.logger.error(f"Error coming : {str(e)}")
-                if attempt==settings.MAX_RETRIES-1:
+                error_str = str(e)
+                self.logger.error(f"Error on attempt {attempt + 1}: {error_str}")
+                
+                # Check if it's an API key error
+                if "401" in error_str or "Invalid API Key" in error_str:
+                    self.logger.warning("API key error detected. This might be a temporary issue.")
+                    if attempt < settings.MAX_RETRIES - 1:
+                        # Add exponential backoff with jitter for API key errors
+                        wait_time = (2 ** attempt) + random.uniform(0, 1)
+                        self.logger.info(f"Waiting {wait_time:.1f} seconds before retry...")
+                        time.sleep(wait_time)
+                        # Reinitialize the LLM client in case of API key issues
+                        self.llm = get_groq_llm()
+                        continue
+                
+                # For other errors, add a shorter delay
+                elif attempt < settings.MAX_RETRIES - 1:
+                    wait_time = 1 + random.uniform(0, 0.5)
+                    self.logger.info(f"Waiting {wait_time:.1f} seconds before retry...")
+                    time.sleep(wait_time)
+                    continue
+                
+                # If this is the last attempt, raise the exception
+                if attempt == settings.MAX_RETRIES - 1:
                     raise CustomException(f"Generation failed after {settings.MAX_RETRIES} attempts", e)
                 
     
