@@ -89,9 +89,9 @@ pipeline {
                         chmod +x /tmp/argocd-linux-amd64
                         mv /tmp/argocd-linux-amd64 /usr/local/bin/argocd
                         
-                        # Get ArgoCD server details
-                        ARGOCD_SERVER=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.clusterIP}')
-                        ARGOCD_PORT=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[0].port}')
+                        # Get ArgoCD server details - use NodePort
+                        ARGOCD_SERVER=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+                        ARGOCD_PORT=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[0].nodePort}')
                         
                         # Login to ArgoCD
                         argocd login $ARGOCD_SERVER:$ARGOCD_PORT --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
