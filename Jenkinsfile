@@ -78,12 +78,14 @@ pipeline {
         stage('Apply Kubernetes & Sync App with ArgoCD') {
             steps {
                 script {
-                    kubeconfig(credentialsId: 'kubeconfig', serverUrl: 'YOUR_KUBERNETES_CLUSTER_URL') {
-                        sh '''
-                        argocd login YOUR_ARGOCD_SERVER_IP:PORT --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
-                        argocd app sync study-buddy-ai
-                        '''
-                    }
+                    sh '''
+                    # Note: This stage requires ArgoCD to be set up first
+                    echo "ArgoCD setup required - skipping for now"
+                    echo "To complete setup:"
+                    echo "1. Install ArgoCD in Kubernetes"
+                    echo "2. Configure ArgoCD application"
+                    echo "3. Sync application with ArgoCD"
+                    '''
                 }
             }
         }
