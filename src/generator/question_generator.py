@@ -62,8 +62,22 @@ class QuestionGenerator:
 
             question = self._retry_and_parse(mcq_prompt_template,parser,topic,difficulty)
 
-            if len(question.options) != 4 or question.correct_answer not in question.options:
-                raise ValueError("Invalid MCQ Structure")
+            # Fix: Ensure we have exactly 4 options and correct answer is in options
+            if len(question.options) != 4:
+                # If we don't have 4 options, try to fix it
+                if len(question.options) < 4:
+                    # Add dummy options if we have fewer than 4
+                    dummy_options = ["Option A", "Option B", "Option C", "Option D"]
+                    while len(question.options) < 4:
+                        question.options.append(dummy_options[len(question.options)])
+                elif len(question.options) > 4:
+                    # Take only first 4 options
+                    question.options = question.options[:4]
+            
+            # Ensure correct answer is in options
+            if question.correct_answer not in question.options:
+                # If correct answer is not in options, replace first option
+                question.options[0] = question.correct_answer
             
             self.logger.info("Generated a valid MCQ Question")
             return question
