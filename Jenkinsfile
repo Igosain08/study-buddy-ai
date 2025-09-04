@@ -4,6 +4,7 @@ pipeline {
         DOCKER_HUB_REPO = "igosain/studybuddy"
         DOCKER_HUB_CREDENTIALS_ID = "dockerhub-token"
         IMAGE_TAG = "v${BUILD_NUMBER}"
+        GROQ_API_KEY = credentials('groq-api-key')
     }
     stages {
         stage('Checkout Github') {
@@ -78,14 +79,38 @@ pipeline {
         stage('Apply Kubernetes & Sync App with ArgoCD') {
             steps {
                 script {
-                    sh '''
-                    # Note: This stage requires ArgoCD to be set up first
-                    echo "ArgoCD setup required - skipping for now"
-                    echo "To complete setup:"
-                    echo "1. Install ArgoCD in Kubernetes"
-                    echo "2. Configure ArgoCD application"
-                    echo "3. Sync application with ArgoCD"
-                    '''
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh '''
+                        # Set kubeconfig
+                        export KUBECONFIG=$KUBECONFIG
+                        
+                        # Install ArgoCD CLI
+                        curl -sSL -o /tmp/argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+                        chmod +x /tmp/argocd-linux-amd64
+                        mv /tmp/argocd-linux-amd64 /usr/local/bin/argocd
+                        
+                        # Get ArgoCD server details
+                        ARGOCD_SERVER=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.clusterIP}')
+                        ARGOCD_PORT=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[0].port}')
+                        
+                        # Login to ArgoCD
+                        argocd login $ARGOCD_SERVER:$ARGOCD_PORT --username admin --password $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) --insecure
+                        
+                        # Apply Kubernetes manifests
+                        kubectl apply -f manifests/deployment.yaml
+                        kubectl apply -f manifests/service.yaml
+                        
+                        # Create secret for GROQ API key if it doesn't exist
+                        kubectl create secret generic groq-api-secret \
+                          --from-literal=GROQ_API_KEY="${GROQ_API_KEY}" \
+                          -n argocd --dry-run=client -o yaml | kubectl apply -f -
+                        
+                        # Sync ArgoCD application
+                        argocd app sync studybuddy-app --insecure
+                        
+                        echo "ArgoCD sync completed successfully!"
+                        '''
+                    }
                 }
             }
         }
