@@ -105,6 +105,12 @@ pipeline {
                           --from-literal=GROQ_API_KEY="${GROQ_API_KEY}" \
                           -n argocd --dry-run=client -o yaml | kubectl apply -f -
                         
+                        # Apply ArgoCD application manifest
+                        kubectl apply -f manifests/argocd-app.yaml
+                        
+                        # Wait a moment for the application to be created
+                        sleep 10
+                        
                         # Sync ArgoCD application
                         argocd app sync studybuddy-app --insecure
                         
