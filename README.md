@@ -123,3 +123,12 @@ This project is licensed under the MIT License.
 ---
 
 **Happy Learning! 🎓✨**
+
+## 🚀 GitOps Pipeline Status
+
+✅ **Fully Automated CI/CD Pipeline**
+- Jenkins CI/CD pipeline configured
+- ArgoCD GitOps deployment active
+- Automatic webhook triggering enabled
+- Docker image auto-build and push
+- Kubernetes deployment automation
