@@ -79,10 +79,11 @@ pipeline {
         stage('Apply Kubernetes & Sync App with ArgoCD') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    withCredentials([string(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
                         sh '''
-                        # Set kubeconfig
-                        export KUBECONFIG=$KUBECONFIG
+                        # Create kubeconfig file from secret content
+                        echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+                        export KUBECONFIG=/tmp/kubeconfig
                         
                         # Install ArgoCD CLI
                         curl -sSL -o /tmp/argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
