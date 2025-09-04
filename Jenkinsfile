@@ -14,18 +14,25 @@ pipeline {
         }        
         stage('Build Docker Image') {
             steps {
+                echo 'Building Docker image...'
                 script {
-                    echo 'Building Docker image...'
-                    dockerImage = docker.build("${DOCKER_HUB_REPO}:${IMAGE_TAG}")
+                    sh """
+                    docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} .
+                    docker tag ${DOCKER_HUB_REPO}:${IMAGE_TAG} ${DOCKER_HUB_REPO}:latest
+                    """
                 }
             }
         }
         stage('Push Image to DockerHub') {
             steps {
+                echo 'Pushing Docker image to DockerHub...'
                 script {
-                    echo 'Pushing Docker image to DockerHub...'
-                    docker.withRegistry('https://registry.hub.docker.com' , "${DOCKER_HUB_CREDENTIALS_ID}") {
-                        dockerImage.push("${IMAGE_TAG}")
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh """
+                        echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+                        docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}
+                        docker push ${DOCKER_HUB_REPO}:latest
+                        """
                     }
                 }
             }
@@ -58,12 +65,13 @@ pipeline {
         stage('Install Kubectl & ArgoCD CLI Setup') {
             steps {
                 sh '''
-                echo 'installing Kubectl & ArgoCD cli...'
+                echo 'Installing Kubectl & ArgoCD CLI...'
                 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
                 chmod +x kubectl
-                mv kubectl /usr/local/bin/kubectl
-                curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-                chmod +x /usr/local/bin/argocd
+                sudo mv kubectl /usr/local/bin/kubectl
+                curl -sSL -o /tmp/argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+                chmod +x /tmp/argocd-linux-amd64
+                sudo mv /tmp/argocd-linux-amd64 /usr/local/bin/argocd
                 '''
             }
         }
